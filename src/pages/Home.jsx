@@ -4,6 +4,7 @@ import { auth, db } from "../services/firebase";
 import { signOut } from "firebase/auth";
 import { collection, query, where, onSnapshot, addDoc, serverTimestamp } from "firebase/firestore";
 import { useBreakpoint } from "../hooks/useBreakpoint";
+import { useNotifications } from "../hooks/useNotifications";
 
 export default function Home() {
   const navigate = useNavigate();
@@ -12,6 +13,20 @@ export default function Home() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [notifPermission, setNotifPermission] = useState(
+    typeof window !== "undefined" && "Notification" in window
+      ? Notification.permission
+      : "denied"
+  );
+
+  // Schedule browser notifications for un-logged doses
+  useNotifications(medications, logs);
+
+  async function requestNotifPermission() {
+    if (!("Notification" in window)) return;
+    const result = await Notification.requestPermission();
+    setNotifPermission(result);
+  }
 
   const todayStr = new Date().toDateString();
   const todayFormatted = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
@@ -79,6 +94,25 @@ export default function Home() {
         )}
       </nav>
       <div style={s.navRule} />
+
+      {/* ── Notification permission banner ── */}
+      {notifPermission === "default" && (
+        <div style={nb.banner}>
+          <div style={nb.inner}>
+            <div style={nb.left}>
+              <span style={nb.icon}>🔔</span>
+              <div>
+                <p style={nb.title}>Enable dose reminders</p>
+                <p style={nb.sub}>Get notified at the right time to take your medication.</p>
+              </div>
+            </div>
+            <div style={nb.actions}>
+              <button style={nb.allowBtn} onClick={requestNotifPermission}>ALLOW →</button>
+              <button style={nb.dismissBtn} onClick={() => setNotifPermission("denied")}>✕</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Hero ── */}
       <header style={{ ...s.hero, padding: isMobile ? "32px 16px 28px" : "64px 40px 48px" }}>
@@ -192,6 +226,75 @@ function MedCard({ med, isLogged, onTaken, onSkipped }) {
     </article>
   );
 }
+
+/* ── Notification banner styles ── */
+const nb = {
+  banner: {
+    background: "#000",
+    borderBottom: "4px solid #000",
+  },
+  inner: {
+    maxWidth: "1152px",
+    margin: "0 auto",
+    padding: "14px 40px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "16px",
+    flexWrap: "wrap",
+  },
+  left: {
+    display: "flex",
+    alignItems: "center",
+    gap: "14px",
+    flex: 1,
+    minWidth: "200px",
+  },
+  icon: { fontSize: "18px", flexShrink: 0 },
+  title: {
+    fontFamily: "'JetBrains Mono',monospace",
+    fontSize: "0.65rem",
+    letterSpacing: "0.12em",
+    color: "#fff",
+    fontWeight: 500,
+    marginBottom: "2px",
+  },
+  sub: {
+    fontFamily: "'Source Serif 4',Georgia,serif",
+    fontSize: "0.8rem",
+    color: "rgba(255,255,255,0.6)",
+    lineHeight: 1.4,
+  },
+  actions: { display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 },
+  allowBtn: {
+    background: "#fff",
+    color: "#000",
+    border: "none",
+    borderRadius: 0,
+    padding: "10px 20px",
+    fontFamily: "'JetBrains Mono',monospace",
+    fontSize: "0.6rem",
+    letterSpacing: "0.12em",
+    cursor: "pointer",
+    fontWeight: 500,
+    minHeight: "44px",
+  },
+  dismissBtn: {
+    background: "transparent",
+    color: "rgba(255,255,255,0.5)",
+    border: "1px solid rgba(255,255,255,0.2)",
+    borderRadius: 0,
+    width: "36px",
+    height: "36px",
+    minHeight: "44px",
+    cursor: "pointer",
+    fontFamily: "monospace",
+    fontSize: "14px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+};
 
 const s = {
   page: { minHeight: "100vh", background: "#fff", display: "flex", flexDirection: "column" },
