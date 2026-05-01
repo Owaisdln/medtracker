@@ -6,6 +6,17 @@ import { collection, query, where, onSnapshot, addDoc, serverTimestamp } from "f
 import { useBreakpoint } from "../hooks/useBreakpoint";
 import { useNotifications } from "../hooks/useNotifications";
 
+/** Format raw time label for display: preset labels pass through, HH:MM → 12h */
+function formatTimeLabel(t) {
+  const match = t.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return t.toUpperCase(); // preset label like MORNING
+  const h = parseInt(match[1], 10);
+  const m = parseInt(match[2], 10);
+  const ampm = h >= 12 ? "PM" : "AM";
+  const h12 = h % 12 || 12;
+  return `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
+}
+
 export default function Home() {
   const navigate = useNavigate();
   const { isMobile, isTablet } = useBreakpoint();
@@ -207,7 +218,7 @@ function MedCard({ med, isLogged, onTaken, onSkipped }) {
             <div key={time} style={cs.timeRow}>
               <div style={cs.timeLabel}>
                 <span style={cs.timeDot}>▸</span>
-                <span style={cs.timeText}>{time.toUpperCase()}</span>
+                <span style={cs.timeText}>{formatTimeLabel(time)}</span>
               </div>
               {log ? (
                 <div style={{ ...cs.badge, background: log.status === "taken" ? "#000" : "transparent", color: log.status === "taken" ? "#fff" : "#000", border: log.status === "taken" ? "none" : "1px solid #000" }}>
