@@ -21,6 +21,9 @@ export default function App() {
           <Route path="/add" element={<ProtectedRoute><AddMedication /></ProtectedRoute>} />
           <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+          {/* Catch-all: redirect any unknown route to home */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+
         </Routes>
       </BrowserRouter>
     </AuthProvider>
