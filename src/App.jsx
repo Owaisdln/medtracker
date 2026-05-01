@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./store/AuthContext";
 import Home from "./pages/Home";
-import AddMedication from "./pages/AddMedication";
+import AddMedication from "./pages/Addmedication";
 import History from "./pages/History";
 import Settings from "./pages/Settings";
 import Login from "./pages/Login";
